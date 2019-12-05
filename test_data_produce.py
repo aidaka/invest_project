@@ -10,7 +10,7 @@ today = time.strftime("%Y%m%d", time.localtime)
 
 # 寻找符合要求的测试数据，将数据写入csv
 def test_data_produce(data):
-    start_date = max(get_latest_test_date())
+    start_date = get_latest_test_date()
     cal_data = data[data['TradingDate'] > start_date]
     target_data = cal_profit(cal_data, 5, True)
     df_group = target_data.groupby(by="Date")
@@ -22,8 +22,9 @@ def test_data_produce(data):
 
 # 收集测试数据对应的验证数据,更新相应文件
 def confirm_data_update(data):
-    start_date = get_latest_confirm_date()
-    test_dates = get_latest_test_date()
+    confirm_dates = get_latest_confirm_date()
+    end_date = get_latest_test_date()
+    
     cal_data = data[data['TradingDate'] >= start_date]
 
     cal_dates = list(filter(lambda x:x > start_date, test_dates))
@@ -95,8 +96,7 @@ def cal_profit(data, up_day:int, test:bool):
     # 转为dataframe输出
     df_profit = pd.DataFrame(dayn_profit, columns=['ID', 'Date', 'total', 'max'])
 
-    # write_data(dayn_profit, 'C:\Users\wuziyang\Documents\PyWork\data\analyse_data\1.txt')
-    return (df_profit)
+    return df_profit
 
 data = pd.read_csv(r'')
 rec_data = get_data(data)
