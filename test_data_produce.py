@@ -10,7 +10,7 @@ today = time.strftime("%Y%m%d", time.localtime)
 
 # 寻找符合要求的测试数据，将数据写入csv
 def test_data_produce(data):
-    start_date = get_latest_test_date()
+    start_date = max(get_latest_test_date())
     cal_data = data[data['TradingDate'] > start_date]
     target_data = cal_profit(cal_data, 5, True)
     df_group = target_data.groupby(by="Date")
@@ -24,8 +24,10 @@ def test_data_produce(data):
 def confirm_data_update(data):
     confirm_dates = get_latest_confirm_date()
     end_date = get_latest_test_date()
-    
-    cal_data = data[data['TradingDate'] >= start_date]
+    _3month_ago = datetime.date.today() - relativedelta(months=3)
+
+
+    cal_data = data[data['TradingDate'] >= _3month_ago]
 
     cal_dates = list(filter(lambda x:x > start_date, test_dates))
     target_data = cal_profit(cal_data, 50, False)
@@ -61,7 +63,7 @@ def get_latest_test_date():
         return today
     for f in test_files:
         test_date += int(f)
-    return max(test_date)
+    return test_date
 
 # 处理输入数据，返回选择天数n的累计值和最大值
 def cal_profit(data, up_day:int, test:bool):

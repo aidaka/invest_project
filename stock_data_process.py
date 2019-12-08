@@ -1,4 +1,4 @@
-#-*- coding:utf-8 –*-
+# -*- coding:utf-8 –*-
 import numpy as np
 import re
 import random
@@ -22,7 +22,7 @@ def read_txt(path):
 
 
 # 计算n天的利率并导出
-def calndays_profit(data, up_day:int):
+def calndays_profit(data, up_day: int):
     cal_data = data
     # df_group = cal_data.groupby(by="Symbol")
     # stock_list = list(df_group.groups.keys())
@@ -50,71 +50,83 @@ def calndays_profit(data, up_day:int):
     #     ret_data.append(q.get())
 
     # 整理返回数据并导出
-    output_data = cal_profit(cal_data, 50)
+    output_data = cal_profit(cal_data, 35)
     # for i in range(1, len(ret_data)):
     #     output_data.append(ret_data[i])
-    output_data.to_csv(r'C:\Users\wuziyang\Documents\PyWork\trading_simulation\data\analyse_data\basic_analyse_profit.csv', index=False)
+    output_data.to_csv(
+        r'C:\Users\wuziyang\Documents\PyWork\trading_simulation\data\analyse_data\basic_analyse_profit.csv', index=False)
 
     return output_data
-    
 
-# 处理输入数据，返回1,5,10和选择天数n的累计利润
-def cal_profit(data, up_day:int):
+
+# 处理输入数据，返回1,5和选择天数n的累计利润
+def cal_profit(data, up_day: int):
     date = ""
     df_group = data.groupby(by="Symbol")
     stock_list = list(df_group.groups.keys())
     dayn_profit = []
     count = 0
     print("all stock:" + str(len(stock_list)))
-    for i in stock_list:
+    for stock_id in stock_list:
         count += 1
-        if count // 50 == 0:
+        if count % 50 == 0:
             print("now :" + str(count))
-        cur_data = data.loc[data['Symbol'] == i]
+        cur_data = data.loc[data['Symbol'] == stock_id]
         cur_data = cur_data.sort_values("TradingDate")
-        for i in range(len(cur_data) - up_day):
+        # 若无满足条件数据则下一条
+        if len(cur_data) - up_day <= 0:
+            continue
+
+        #获取数据
+        dates = []
+        profits = []
+        for _iter in cur_data.itertuples():
+            dates.append(getattr(_iter, 'TradingDate'))
+            profits.append(getattr(_iter, 'ChangeRatio'))
+            
+        # 计算数据
+        for i in range(len(dates) - up_day):
             cur_profit = 0.0
-            _0profit = data['ChangeRatio'][i]
             _5profit = 0.0
-            _10profit = 0.0
-            _15profit = 0.0
+            # _10profit = 0.0
+            # _15profit = 0.0
             max_profit = 0.0
-            date = data['TradingDate'][i]
-            stock_id = cur_data[i]
-            # 50+5天后同id才计算
-            if data['Symbol'][i] == data['Symbol'][i + up_day + 5 - 1]:
-                for j in range(0, up_day + 5):
-                    day_data = data['ChangeRatio'][i + j]
-                    cur_profit = (1 + cur_profit) * day_data + cur_profit
-                    if cur_profit >= max_profit:
-                        max_profit = cur_profit
-                    # 记录第5,10,15天最大profit，最后添加
-                    if j == 5:
-                        _5profit = max_profit
-                    if j == 10:
-                        _10profit = max_profit
-                    if j == 15:
-                        _15profit = max_profit
-                dayn_profit.append([stock_id, date, _0profit, _5profit, _10profit, _15profit, max_profit])
-    
+            date = dates[i]
+            # n天后同id才计算
+            # if data['Symbol'][i] == data['Symbol'][i + up_day - 1]:
+            for j in range(0, up_day):
+                day_data = profits[i + j]
+                cur_profit = (1 + cur_profit) * day_data + cur_profit
+                if cur_profit >= max_profit:
+                    max_profit = cur_profit
+                # 记录第5天profit，最后添加
+                if j == 5:
+                    _5profit = cur_profit
+                # if j == 10:
+                #     _10profit = cur_profit
+                # if j == 15:
+                #     _15profit = cur_profit
+            dayn_profit.append(
+                [stock_id, date, _5profit, cur_profit, max_profit])
+
     # 转为dataframe输出
-    df_profit = pd.DataFrame(dayn_profit, columns=['ID', 'Date', 'today', '5day', '10day', '15day', 'max'])
+    df_profit = pd.DataFrame(dayn_profit, columns=[
+                             'ID', 'Date', '5day', 'end', 'max'])
 
     # write_data(dayn_profit, 'C:\Users\wuziyang\Documents\PyWork\data\analyse_data\1.txt')
     return (df_profit)
 
 
-# 生成假数据        
-def produce_data():
-    output = open('C:/Users/Administrator/Desktop/data1.txt', 'w')
-    for i in range(0, 100):
-        pro = random.uniform(-0.1, 0.1)
-        out_string = '1,' + str(pro) + ',' + str(i)
-        output.writelines(out_string)
-        output.write('\n')
-    print('ok')
-    output.close
-
+# # 生成假数据
+# def produce_data():
+#     output = open('C:/Users/Administrator/Desktop/data1.txt', 'w')
+#     for i in range(0, 100):
+#         pro = random.uniform(-0.1, 0.1)
+#         out_string = '1,' + str(pro) + ',' + str(i)
+#         output.writelines(out_string)
+#         output.write('\n')
+#     print('ok')
+#     output.close
 
 # 导出数据
 def write_data(data, path):
@@ -140,10 +152,13 @@ def collect_data(data, per):
 
 
 # produce_data()
-df_data = pd.read_csv(r'C:\Users\wuziyang\Documents\PyWork\trading_simulation\data\stockdata\stock.csv', sep=',')
+df_data = pd.read_csv(
+    r'C:\Users\wuziyang\Documents\PyWork\trading_simulation\data\stockdata\stock.csv', sep=',')
 input_data = df_data[['TradingDate', 'Symbol', 'ChangeRatio']]
-print("i am in")
+start_time = time.time
 basic_data = calndays_profit(input_data, 50)
+end_time = time.time
+print("processing time = ", start_time - end_time)
 # (ex_data, unex_data, rate) = collect_data(basic_data, 0.12)
 # ex_data.to_csv(r'C:\Users\wuziyang\Documents\PyWork\trading_simulation\data\analyse_data\over_data.csv', index=False)
 # unex_data.to_csv(r'C:\Users\wuziyang\Documents\PyWork\trading_simulation\data\analyse_data\below_data.csv', index=False)

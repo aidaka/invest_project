@@ -9,3 +9,4 @@ def get_data(date):
     df = pro.daily(trade_date='')
     return
 
+df.read_csv()
