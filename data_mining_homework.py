@@ -1,10 +1,11 @@
 import numpy as np
 import pandas as pd
+import math
 
 
 # 使用K-means方法，对输入数据聚类
 # 距离计算方法：distance = (x1 - x2)^2 + (y1 - y2)^2
-# 输入：待分类数据(numpy.array)，分类类别数(int)，最大迭代次数(int)，迭代终止最大平均误差(float)
+# 输入：待分类数据(numpy.array[numpy.array])，分类类别数(int)，最大迭代次数(int)，迭代终止最大平均误差(float)
 # 输出：分类结果(List[List[int]])
 def classify(data, class_num, max_iter, stop_loss):
     # 保存结果
@@ -40,6 +41,12 @@ def classify(data, class_num, max_iter, stop_loss):
             res_list[_class].append(index)
             sum_point_list[_class][0] += data[index][0]
             sum_point_list[_class][1] += data[index][1]
+        # 计算与上一中心点的偏差并更新
+        loss = 0.0
+        for k in range(5):
+            new_x = sum_point_list[k][0] / len(res_list[k])
+            new_y = sum_point_list[k][1] / len(res_list[k])
+            loss += math.sqrt(pow(new_x - center_list[k][0], 2) + pow(new_y - center_list[k][1], 2))
             
     res_list.append(1)
     return 
