@@ -1,6 +1,7 @@
 import numpy as np
 import pandas as pd
 import math
+import matplotlib.pyplot as plt
 
 
 # 使用K-means方法，对输入数据聚类
@@ -20,13 +21,19 @@ def classify(data, class_num, max_iter, stop_loss):
         return
     
     # 初始化
-    for i in class_num:
+    for i in range(class_num):
         center_list.append(data[i])
         res_list.append(list())
-        sum_point_list.append(list(0.0, 0.0))
+        sum_point_list.append(list([0.0, 0.0]))
 
     # 聚类
     for i in range(max_iter):
+        if i % 100 == 0:
+            print("processing " + str(i) + " now...")
+        # 每次清空缓存结果
+        for m in range(5):
+            res_list[m] = list()
+
         for index in range(len(data)):
             # 寻找最近中心点
             min_dis = np.sum(np.square(center_list[0] - data[index]))
@@ -44,12 +51,19 @@ def classify(data, class_num, max_iter, stop_loss):
         # 计算与上一中心点的偏差并更新
         loss = 0.0
         for k in range(5):
+            # 出现特殊情况，中心点周围一个点都没有，则保持原中心点并将误差记为0
+            if len(res_list[k]) == 0:
+                continue
+
             new_x = sum_point_list[k][0] / len(res_list[k])
             new_y = sum_point_list[k][1] / len(res_list[k])
             loss += math.sqrt(pow(new_x - center_list[k][0], 2) + pow(new_y - center_list[k][1], 2))
+            center_list[k] = list([new_x, new_y])
+        
+        if loss / 5 <= stop_loss:
+            break
             
-    res_list.append(1)
-    return 
+    return res_list
 
 
 # 读取待分类数据，数据存储在csv文件中，格式为：
@@ -57,11 +71,28 @@ def read_data(path):
     df = pd.read_csv(path)
     return df
 
-
-# 读取数据
-df_data = read_data(r'')
+classes = 5
+# 读取df数据
+df_data = read_data(r'C:\Users\wuziyang\Desktop\1.csv')
 # 数据转成numpy数组
 np_data = df_data.values
+# plt.plot(np_data[:, 0], np_data[:, 1], 'o')
+# plt.show()
 # 聚类
-classify(np_data, 5, 1000, 1e-5)
-# 打印结果
+result = classify(np_data, classes, 1000, 1e-5)
+# 展示结果
+colors = ['b', 'g', 'r', 'y', 'k', 'w', 'm', 'c']
+for i in range(classes):
+    plt.plot(np_data[result[i], 0], np_data[result[i], 1], marker='o', color=colors[i])
+plt.xlabel('x')
+plt.ylabel('y')
+plt.show()
+
+
+a = [[1,2,3],[4,5,6]]
+print(a[0][1])
+
+
+# a = np.array([1,2,3,4,5,6])
+# b = np.array([3,5])
+# print(a[b])
