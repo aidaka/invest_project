@@ -117,17 +117,6 @@ def cal_profit(data, up_day: int):
     return (df_profit)
 
 
-# # 生成假数据
-# def produce_data():
-#     output = open('C:/Users/Administrator/Desktop/data1.txt', 'w')
-#     for i in range(0, 100):
-#         pro = random.uniform(-0.1, 0.1)
-#         out_string = '1,' + str(pro) + ',' + str(i)
-#         output.writelines(out_string)
-#         output.write('\n')
-#     print('ok')
-#     output.close
-
 # 导出数据
 def write_data(data, path):
     output = open(path, 'w')

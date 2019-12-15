@@ -7,27 +7,43 @@ from dateutil.relativedelta import relativedelta
 
 # 当前日期
 today = time.strftime("%Y%m%d", time.localtime)
+# 测试与验证路径
+testPath = 'C:\\Users\\wuziyang\\Documents\\PyWork\\trading_simulation\\data\\test\\'
+confirmPath = 'C:\\Users\\wuziyang\\Documents\\PyWork\\trading_simulation\\data\\confirm\\'
 
 # 寻找符合要求的测试数据，将数据写入csv
 def test_data_produce(data):
+    # 获取已有数据的最晚日期
     start_date = max(get_latest_test_date())
+    # 获取最晚日期后的数据
     cal_data = data[data['TradingDate'] > start_date]
+    # 计算5天涨跌
     target_data = cal_profit(cal_data, 5, True)
+    # 按日期排序,输出每天跌幅达到阈值的数据
     df_group = target_data.groupby(by="Date")
-    stock_list = list(df_group.groups.keys())
-    for i in stock_list:
-        everyday_data = data[data['Date'] == i and data['5_total'] <= -0.1]
-        everyday_path = 'C:\\Users\\wuziyang\\Documents\\PyWork\\trading_simulation\\data\\test\\' + str(i) + '.csv'
+    date_list = list(df_group.groups.keys())
+    for i in date_list:
+        everyday_data = data[data['Date'] == i and data['total'] <= -0.1]
+        everyday_path = testPath + str(i) + '.csv'
         everyday_data.to_csv(everyday_path, index=False)
 
 # 收集测试数据对应的验证数据,更新相应文件
+# result: ['countDays', 'ID', 'Date', 'total', 'max']
 def confirm_data_update(data):
-    confirm_dates = get_latest_confirm_date()
-    end_date = get_latest_test_date()
-    _3month_ago = datetime.date.today() - relativedelta(months=3)
-
-
-    cal_data = data[data['TradingDate'] >= _3month_ago]
+    # confirm_dates = get_latest_confirm_date()
+    # end_date = max(get_latest_test_date())
+    confirm_dates = get_trade_day_before(50, data)
+    confirm_data = cal_profit(data, 50, False)
+    for i in confirm_dates:
+        everyday_path = confirmPath + str(i) + '.csv'
+        # 已计算当天数据
+        if os.path.exists(everyday_path):
+            confirmData = pd.read_csv(everyday_path)
+            for 
+        else:
+            # 没有当天数据但存在测试数据
+            if os.path.exists(testPath + str(i) + '.csv'):
+                data
 
     cal_dates = list(filter(lambda x:x > start_date, test_dates))
     target_data = cal_profit(cal_data, 50, False)
@@ -36,7 +52,7 @@ def confirm_data_update(data):
         stock_list = list(df_group.groups.keys())
         for i in stock_list:
             everyday_data = data[data['Date'] == i]
-            everyday_path = 'C:\\Users\\wuziyang\\Documents\\PyWork\\trading_simulation\\data\\confirm\\' + str(i) + '.csv'
+            everyday_path = confirmPath + str(i) + '.csv'
             everyday_data.to_csv(everyday_path, index=False)
 
 # 获取最近三个月的数据，用于提取测试与验证数据
@@ -65,6 +81,15 @@ def get_latest_test_date():
         test_date += int(f)
     return test_date
 
+# 获取n天前的交易日期
+def get_trade_day_before(n:int, data):
+    data = data["Symbol" == 600001]
+    data = data.sort_values("TradingDate", ascending=False)
+    retdate = []
+    for i in range(50):
+        retdate += data.iloc[i]["TradingDate"]
+    return retdate
+
 # 处理输入数据，返回选择天数n的累计值和最大值
 def cal_profit(data, up_day:int, test:bool):
     date = ""
@@ -75,11 +100,11 @@ def cal_profit(data, up_day:int, test:bool):
     print("all stock:" + str(len(stock_list)))
     for i in stock_list:
         count += 1
-        if count // 50 == 0:
+        if count % 50 == 0:
             print("now :" + str(count))
         cur_data = data.loc[data['Symbol'] == i]
         cur_data = cur_data.sort_values("TradingDate")
-        for i in range(len(cur_data) - up_day):
+        for i in range(cur_data.shape[0] - up_day):
             cur_profit = 0.0
             max_profit = 0.0
             date = data['TradingDate'][i]
@@ -87,7 +112,7 @@ def cal_profit(data, up_day:int, test:bool):
             # n天后同id才计算,生成验证数据可以无视此限制
             if data['Symbol'][i] == data['Symbol'][i + up_day - 1] or not test:
                 if not test:
-                    up_day = min(up_day, len(data[data['Symbol']] == i) - i)
+                    up_day = min(up_day, (data[data['Symbol']] == i).shape[0] - i)
                 for j in range(0, up_day):
                     day_data = data['ChangeRatio'][i + j]
                     cur_profit = (1 + cur_profit) * day_data + cur_profit
@@ -99,6 +124,7 @@ def cal_profit(data, up_day:int, test:bool):
     df_profit = pd.DataFrame(dayn_profit, columns=['ID', 'Date', 'total', 'max'])
 
     return df_profit
+
 
 data = pd.read_csv(r'')
 rec_data = get_data(data)
