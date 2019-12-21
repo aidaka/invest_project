@@ -36,15 +36,6 @@ def confirm_data_update(data):
     confirm_data = cal_profit(data, 50, False)
     for i in confirm_dates:
         day_data = confirm_data[confirm_data['Date'] == i]
-        # # 已计算当天数据，更新数据
-        # if os.path.exists(everyday_path):
-        #     confirmData = pd.read_csv(everyday_path)
-        #     for 
-        # else:
-            # # 没有当天数据但存在测试数据，增加文件
-            # if os.path.exists(testPath + str(i) + '.csv'):
-            #     data
-
         # 更新数据
         out_data = []
         if os.path.exists(testPath + str(i) + '.csv'):
@@ -133,7 +124,7 @@ def cal_profit(data, up_day:int, test:bool):
     return df_profit
 
 
-data = pd.read_csv(r'')
+data = pd.read_csv(r'C:\Users\wuziyang\Documents\PyWork\trading_simulation\data\stockdata\stock.csv')
 rec_data = get_data(data)
 test_data_produce(rec_data)
 confirm_data_update(rec_data)
