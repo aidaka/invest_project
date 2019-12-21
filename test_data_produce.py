@@ -32,28 +32,34 @@ def test_data_produce(data):
 def confirm_data_update(data):
     # confirm_dates = get_latest_confirm_date()
     # end_date = max(get_latest_test_date())
-    confirm_dates = get_trade_day_before(50, data)
+    confirm_dates = get_trade_day_before(60, data)
     confirm_data = cal_profit(data, 50, False)
     for i in confirm_dates:
-        everyday_path = confirmPath + str(i) + '.csv'
-        # 已计算当天数据
-        if os.path.exists(everyday_path):
-            confirmData = pd.read_csv(everyday_path)
-            for 
-        else:
-            # 没有当天数据但存在测试数据
-            if os.path.exists(testPath + str(i) + '.csv'):
-                data
+        day_data = confirm_data[confirm_data['Date'] == i]
+        # # 已计算当天数据，更新数据
+        # if os.path.exists(everyday_path):
+        #     confirmData = pd.read_csv(everyday_path)
+        #     for 
+        # else:
+            # # 没有当天数据但存在测试数据，增加文件
+            # if os.path.exists(testPath + str(i) + '.csv'):
+            #     data
 
-    cal_dates = list(filter(lambda x:x > start_date, test_dates))
-    target_data = cal_profit(cal_data, 50, False)
-    for _date in cal_dates:
-        df_group = target_data.groupby(by="Date")
-        stock_list = list(df_group.groups.keys())
-        for i in stock_list:
-            everyday_data = data[data['Date'] == i]
-            everyday_path = confirmPath + str(i) + '.csv'
-            everyday_data.to_csv(everyday_path, index=False)
+        # 更新数据
+        out_data = []
+        if os.path.exists(testPath + str(i) + '.csv'):
+            test_data = pd.read_csv(testPath + str(i) + '.csv')
+            df_group = test_data.groupby(by="ID")
+            id_list = list(df_group.groups.keys())
+            for test_id in id_list:
+                out_data.append(list(day_data.loc[day_data['ID'] == test_id]))
+        else:
+            print('something error when update test data...' + str(i))
+
+        # 转为dataframe输出
+        confirm_df = pd.DataFrame(out_data, columns=['ID', 'Date', 'total', 'max'])
+        confirm_df.to_csv(confirmPath + str(i) + '.csv')                
+
 
 # 获取最近三个月的数据，用于提取测试与验证数据
 def get_data(data):
@@ -104,16 +110,17 @@ def cal_profit(data, up_day:int, test:bool):
             print("now :" + str(count))
         cur_data = data.loc[data['Symbol'] == i]
         cur_data = cur_data.sort_values("TradingDate")
+        # 验证数据消除日期计算限制
+        if not test:
+            up_day = 1
         for i in range(cur_data.shape[0] - up_day):
             cur_profit = 0.0
             max_profit = 0.0
             date = data['TradingDate'][i]
             stock_id = cur_data[i]
-            # n天后同id才计算,生成验证数据可以无视此限制
-            if data['Symbol'][i] == data['Symbol'][i + up_day - 1] or not test:
-                if not test:
-                    up_day = min(up_day, (data[data['Symbol']] == i).shape[0] - i)
-                for j in range(0, up_day):
+            # n天后同id才计算
+            if data['Symbol'][i] == data['Symbol'][i + up_day - 1]:
+                for j in range(0, up_day): 
                     day_data = data['ChangeRatio'][i + j]
                     cur_profit = (1 + cur_profit) * day_data + cur_profit
                     if cur_profit >= max_profit:
