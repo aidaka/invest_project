@@ -11,7 +11,12 @@ from dateutil.relativedelta import relativedelta
 today = int(time.strftime("%Y%m%d", time.localtime()))
 ori_start_date = int((datetime.datetime.today() + datetime.timedelta(weeks=-12)).strftime('%Y%m%d'))
 # 测试与验证路径
-path = 'C:/Users/wuziyang/Documents/PyWork/trading_simulation/test/'
+path_5_5 = 'C:/Users/wuziyang/Documents/PyWork/trading_simulation/test/5_-5/'
+path_5_10 = 'C:/Users/wuziyang/Documents/PyWork/trading_simulation/test/5_-10/'
+path_10_10 = 'C:/Users/wuziyang/Documents/PyWork/trading_simulation/test/10_-10/'
+path_10_15 = 'C:/Users/wuziyang/Documents/PyWork/trading_simulation/test/10_-15/'
+path_10_20 = 'C:/Users/wuziyang/Documents/PyWork/trading_simulation/test/10_-20/'
+
 
 # 寻找符合要求的测试数据，将数据写入csv
 def test_data_produce(data, count_days, drop_rate, path):
@@ -36,10 +41,18 @@ def test_data_produce(data, count_days, drop_rate, path):
 
 # 收集测试数据对应的验证数据,更新相应文件
 # result: ['countDays', 'ID', 'Date', 'total', 'max']
-def confirm_data_update(data, path):
+def confirm_data_update(data, count_days, path):
     test_dates = get_latest_test_date(path + 'test_data/')
     confirm_dates = filter(lambda x: x >= ori_start_date, test_dates)
-    confirm_data = cal_profit(data, 50, False)
+    # 获取需要计算的股票
+    stock_list = list()
+    for dates in confirm_dates:
+        if os.path.exists(path + 'test_data/' + dates + '.csv'):
+            test_data = pd.read_csv(path + 'test_data/' + dates + '.csv')
+            df_group = test_data.groupby(by="ID")
+            stock_list += list(df_group.groups.keys())
+    # 只计算test股票
+    confirm_data = cal_profit(data, count_days, False)
     for i in confirm_dates:
         day_data = confirm_data[confirm_data['Date'] == i]
         # 更新数据
@@ -134,5 +147,18 @@ def cal_profit(data, up_day:int, test:bool):
 data_path = r'C:\Users\wuziyang\Documents\PyWork\trading_simulation\data\stockdata\stock_latest.csv'
 data = pd.read_csv(data_path, sep=',', low_memory=False)
 rec_data = get_data(data)
-test_data_produce(rec_data, 5, -0.1, path)
-confirm_data_update(rec_data, path)
+# test 5days, drop -5, confirm 50days
+test_data_produce(rec_data, 5, -0.05, path_5_5)
+confirm_data_update(rec_data, 50, path_5_5)
+# test 5days, drop -10, confirm 50days
+test_data_produce(rec_data, 5, -0.1, path_5_10)
+confirm_data_update(rec_data, 50, path_5_10)
+# test 10days, drop -10, confirm 50days
+test_data_produce(rec_data, 10, -0.1, path_10_10)
+confirm_data_update(rec_data, 50, path_10_10)
+# test 10days, drop -15, confirm 50days
+test_data_produce(rec_data, 10, -0.15, path_10_15)
+confirm_data_update(rec_data, 50, path_10_15)
+# test 10days, drop -20, confirm 50days
+test_data_produce(rec_data, 10, -0.2, path_10_20)
+confirm_data_update(rec_data, 50, path_10_20)
