@@ -16,10 +16,15 @@ path_5_10 = 'C:/Users/wuziyang/Documents/PyWork/trading_simulation/test/5_-10/'
 path_10_10 = 'C:/Users/wuziyang/Documents/PyWork/trading_simulation/test/10_-10/'
 path_10_15 = 'C:/Users/wuziyang/Documents/PyWork/trading_simulation/test/10_-15/'
 path_10_20 = 'C:/Users/wuziyang/Documents/PyWork/trading_simulation/test/10_-20/'
+_path_5_5 = 'C:/Users/wuziyang/Documents/PyWork/trading_simulation/test/5_5/'
+_path_10_10 = 'C:/Users/wuziyang/Documents/PyWork/trading_simulation/test/10_10/'
 
 
 # 寻找符合要求的测试数据，将数据写入csv
-def test_data_produce(data, count_days, drop_rate, path):
+def test_data_produce(data, count_days, drop_rate, path, isIncrease):
+    if not os.path.exists(path):
+        os.mkdir(path + 'test_data/')
+        os.mkdir(path + 'confirm_data/')
     # 获取已有数据的最晚日期
     start_date = max(get_latest_test_date(path + 'test_data/'))
     # 获取最晚日期后的数据
@@ -33,7 +38,10 @@ def test_data_produce(data, count_days, drop_rate, path):
         temp_list = []
         everyday_data = target_data[target_data['Date'] == i]
         for row in everyday_data.values:
-            if row[2] <= drop_rate:
+            if isIncrease:
+                if row[2] >= drop_rate:
+                    temp_list.append(list(row))
+            elif row[2] <= drop_rate:
                 temp_list.append(list(row))
         if len(temp_list):
             testdata_df = pd.DataFrame(temp_list, columns=['ID', 'Date', 'total', 'max'])
@@ -153,18 +161,20 @@ def cal_profit(data, up_day:int, test:bool):
 data_path = r'C:\Users\wuziyang\Documents\PyWork\trading_simulation\data\stockdata\stock_latest.csv'
 data = pd.read_csv(data_path, sep=',', low_memory=False)
 rec_data = get_data(data)
-# test 5days, drop -5, confirm 50days
-# test_data_produce(rec_data, 5, -0.05, path_5_5)
+# test 5days, rate -5, confirm 50days
+# test_data_produce(rec_data, 5, -0.05, path_5_5, False)
 # confirm_data_update(rec_data, 50, path_5_5)
-# test 5days, drop -10, confirm 50days
-# test_data_produce(rec_data, 5, -0.1, path_5_10)
-# confirm_data_update(rec_data, 50, path_5_10)
-# test 10days, drop -10, confirm 50days
-# test_data_produce(rec_data, 10, -0.1, path_10_10)
+# test 10days, rate -10, confirm 50days
+# test_data_produce(rec_data, 10, -0.1, path_10_10, False)
 # confirm_data_update(rec_data, 50, path_10_10)
-# test 10days, drop -15, confirm 50days
+# test 5days, rate 5, confirm 50days
+test_data_produce(rec_data, 5, 0.05, _path_5_5, True)
+# test 10days, rate 10, confirm 50days
+test_data_produce(rec_data, 10, 0.1, _path_5_5, True)
+
+# test 10days, rate -15, confirm 50days
 #test_data_produce(rec_data, 10, -0.15, path_10_15)
 # confirm_data_update(rec_data, 50, path_10_15)
-# test 10days, drop -20, confirm 50days
-test_data_produce(rec_data, 10, -0.2, path_10_20)
+# test 10days, rate -20, confirm 50days
+# test_data_produce(rec_data, 10, -0.2, path_10_20)
 # confirm_data_update(rec_data, 50, path_10_20)
