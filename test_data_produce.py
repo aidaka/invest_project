@@ -1,4 +1,4 @@
- # ToDo:用set获取需test的股票，然后计算，不必算出所有的股票，节省时间
+ # ToDo:配置可拓展，支持同天数内不同利率的筛选
 
 import numpy as np
 import pandas as pd
@@ -47,10 +47,13 @@ def confirm_data_update(data, count_days, path):
     # 获取需要计算的股票
     stock_list = list()
     for dates in confirm_dates:
-        if os.path.exists(path + 'test_data/' + dates + '.csv'):
-            test_data = pd.read_csv(path + 'test_data/' + dates + '.csv')
+        if os.path.exists(path + 'test_data/' + str(dates) + '.csv'):
+            test_data = pd.read_csv(path + 'test_data/' + str(dates) + '.csv')
             df_group = test_data.groupby(by="ID")
             stock_list += list(df_group.groups.keys())
+    stock_set = set(stock_list)
+
+    data = data[data['Symbol'] in stock_set]
     # 只计算test股票
     confirm_data = cal_profit(data, count_days, False)
     for i in confirm_dates:
@@ -87,6 +90,9 @@ def get_latest_confirm_date():
 # 获取测试数据的所有日期
 def get_latest_test_date(path):
     test_date = []
+    if not os.path.exists(path):
+        test_date.append(ori_start_date)
+        return test_date
     test_files = os.listdir(path)
     if len(test_files) == 0:
         test_date.append(ori_start_date)
@@ -148,17 +154,17 @@ data_path = r'C:\Users\wuziyang\Documents\PyWork\trading_simulation\data\stockda
 data = pd.read_csv(data_path, sep=',', low_memory=False)
 rec_data = get_data(data)
 # test 5days, drop -5, confirm 50days
-test_data_produce(rec_data, 5, -0.05, path_5_5)
-confirm_data_update(rec_data, 50, path_5_5)
+# test_data_produce(rec_data, 5, -0.05, path_5_5)
+# confirm_data_update(rec_data, 50, path_5_5)
 # test 5days, drop -10, confirm 50days
-test_data_produce(rec_data, 5, -0.1, path_5_10)
-confirm_data_update(rec_data, 50, path_5_10)
+# test_data_produce(rec_data, 5, -0.1, path_5_10)
+# confirm_data_update(rec_data, 50, path_5_10)
 # test 10days, drop -10, confirm 50days
-test_data_produce(rec_data, 10, -0.1, path_10_10)
-confirm_data_update(rec_data, 50, path_10_10)
+# test_data_produce(rec_data, 10, -0.1, path_10_10)
+# confirm_data_update(rec_data, 50, path_10_10)
 # test 10days, drop -15, confirm 50days
-test_data_produce(rec_data, 10, -0.15, path_10_15)
-confirm_data_update(rec_data, 50, path_10_15)
+#test_data_produce(rec_data, 10, -0.15, path_10_15)
+# confirm_data_update(rec_data, 50, path_10_15)
 # test 10days, drop -20, confirm 50days
 test_data_produce(rec_data, 10, -0.2, path_10_20)
-confirm_data_update(rec_data, 50, path_10_20)
+# confirm_data_update(rec_data, 50, path_10_20)
